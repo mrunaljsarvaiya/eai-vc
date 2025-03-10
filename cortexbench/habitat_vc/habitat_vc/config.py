@@ -144,13 +144,13 @@ _CONFIG.RL.POLICY.rnn_type = "GRU"
 _CONFIG.RL.POLICY.num_recurrent_layers = 2
 _CONFIG.RL.POLICY.use_augmentations = True
 _CONFIG.RL.POLICY.use_augmentations_test_time = True
-_CONFIG.RL.POLICY.freeze_backbone = False
+_CONFIG.RL.POLICY.freeze_backbone = True # whther to freeze vit backbone
 _CONFIG.RL.POLICY.global_pool = False
 _CONFIG.RL.POLICY.use_cls = False
 
 _CONFIG.RL.PPO.clip_param = 0.2
 _CONFIG.RL.PPO.ppo_epoch = 2
-_CONFIG.RL.PPO.num_mini_batch = 2
+_CONFIG.RL.PPO.num_mini_batch = 8
 _CONFIG.RL.PPO.value_loss_coef = 0.5
 _CONFIG.RL.PPO.entropy_coef = 0.01
 _CONFIG.RL.PPO.lr = 2.5e-4

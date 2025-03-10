@@ -40,6 +40,7 @@ class EAINet(Net):
     ):
         super().__init__()
 
+        print("Starting EAINET")
         rnn_input_size = 0
 
         # visual encoder
@@ -108,6 +109,9 @@ class EAINet(Net):
         # TODO: move this to the model files
         # freeze backbone
         if freeze_backbone:
+            print(f"\n -----------")
+            print("Freezing backbone")
+            print(f"\n -----------")
             for p in self.visual_encoder.backbone.parameters():
                 p.requires_grad = False
             has_goal_encoder = hasattr(self, "goal_visual_encoder")
@@ -120,7 +124,11 @@ class EAINet(Net):
                     self.goal_visual_encoder = convert_frozen_batchnorm(
                         self.goal_visual_encoder
                     )
-
+        else:
+            print(f"\n -----------")
+            print("NOT Freezing backbone")
+            print(f"\n -----------")
+            
         # save configuration
         self._hidden_size = hidden_size
 

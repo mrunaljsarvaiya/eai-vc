@@ -1,4 +1,4 @@
-VERBOSE: False
+VERBOSE: True
 TRAINER_NAME: "mddppo"
 ENV_NAME: "SimpleRLEnv"
 SENSORS: ["RGB_SENSOR"]
@@ -11,7 +11,7 @@ CHECKPOINT_FOLDER: ${hydra:sweep.dir}/checkpoints
 LOG_DIR: ${hydra:sweep.dir}/logs
 LOG_FILE: ${hydra:sweep.dir}/train.log
 
-NUM_ENVIRONMENTS: 10
+NUM_ENVIRONMENTS: 30
 LOG_INTERVAL: 100
 NUM_CHECKPOINTS: 100
 NUM_UPDATES: -1
@@ -37,14 +37,14 @@ RL:
     use_augmentations: True
     use_augmentations_test_time: True
     freeze_batchnorm: True
-    freeze_backbone: False
+    freeze_backbone: True
     global_pool: False
     use_cls: False
 
   PPO:
     clip_param: 0.2
     ppo_epoch: 2
-    num_mini_batch: 2
+    num_mini_batch: 8
     value_loss_coef: 0.5
     entropy_coef: 0.01
     lr: 2.5e-4

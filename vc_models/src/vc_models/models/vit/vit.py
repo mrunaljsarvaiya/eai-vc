@@ -223,8 +223,14 @@ def vit_huge_patch14(**kwargs):
 
 def load_mae_encoder(model, checkpoint_path=None):
     if checkpoint_path is None:
+        print(f"\n-------------------")
+        print(f"NOT loading checkpoint {checkpoint_path}")
+        print(f"\n------------------")
         return model
     else:
+        print(f"\n-------------------")
+        print(f"Loading checkpoint {checkpoint_path}")
+        print(f"\n------------------")
         model_utils.download_model_if_needed(checkpoint_path)
 
     if not os.path.isabs(checkpoint_path):
