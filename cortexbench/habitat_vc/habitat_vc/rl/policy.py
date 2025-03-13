@@ -17,6 +17,7 @@ from torch import nn as nn
 
 from habitat_vc.rl.imagenav.sensors import ImageGoalRotationSensor
 from habitat_vc.visual_encoder import VisualEncoder
+from habitat_vc.models.mapnet import MapNet
 from habitat_vc.models.freeze_batchnorm import convert_frozen_batchnorm
 
 
@@ -59,11 +60,13 @@ class EAINet(Net):
             use_augmentations=use_augmentations,
         )
 
+        self.map_encoder = MapNet()
+        rnn_input_size += 256 # Adjust based on CNN output size
+
         self.visual_fc = nn.Sequential(
             nn.Linear(self.visual_encoder.output_size, hidden_size),
             nn.ReLU(True),
-        )
-
+        ) 
         rnn_input_size += hidden_size
 
         # object goal embedding
@@ -154,6 +157,7 @@ class EAINet(Net):
         # concatenate images
         if imagenav_task:
             goal_images = observations[ImageGoalRotationSensor.cls_uuid]
+
             x = torch.cat([images, goal_images], dim=0)
         else:
             x = images
@@ -183,6 +187,12 @@ class EAINet(Net):
         rgb = self.visual_encoder(rgb)
         rgb = self.visual_fc(rgb)
         x.append(rgb)
+
+        # map encoder
+        plot_map = observations["local_top_down_map"].float()
+        plot_map = plot_map.unsqueeze(1)
+        map_encoding = self.map_encoder(plot_map)
+        x.append(map_encoding)
 
         # goal embedding
         if ImageGoalRotationSensor.cls_uuid in observations:
