@@ -10,7 +10,7 @@ TASK_CONFIG:
       WIDTH: 128
       HEIGHT: 128
     AGENT_0:
-      SENSORS: ["RGB_SENSOR"]
+      SENSORS: ["RGB_SENSOR", "LOCAL_TOP_DOWN_MAP_SENSOR"] # Added local map sensor
 
   TASK:
     POSSIBLE_ACTIONS: ["STOP", "MOVE_FORWARD", "TURN_LEFT", "TURN_RIGHT"]
@@ -37,6 +37,11 @@ TASK_CONFIG:
       TYPE: "ImageGoalRotationSensor"
       SAMPLE_ANGLE: True
 
+    LOCAL_TOP_DOWN_MAP_SENSOR:  # New top-down map sensor config
+      TYPE: "LocalTopDownMapSensor"
+      MAP_RESOLUTION: 512  # Adjust resolution of the full map
+      LOCAL_MAP_SIZE: 64  # Size of the local map extracted around the agent
+
     TYPE: "Nav-v0"
     SUCCESS_DISTANCE: 1.0
     SUCCESS:
@@ -46,7 +51,7 @@ TASK_CONFIG:
       TYPE: "TrainSuccess"
       SUCCESS_DISTANCE: 0.8
 
-    SENSORS: ["IMAGEGOAL_ROTATION_SENSOR"]
+    SENSORS: ["IMAGEGOAL_ROTATION_SENSOR", "LOCAL_TOP_DOWN_MAP_SENSOR"]
 
     MEASUREMENTS: [
       "DISTANCE_TO_GOAL",
