@@ -11,7 +11,7 @@ from habitat.config import Config
 from habitat.core.embodied_task import EmbodiedTask, Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Simulator
-from habitat.tasks.nav.nav import DistanceToGoal
+from habitat.tasks.nav.nav import DistanceToGoal, PlannerGoal
 
 from habitat_vc.rl.measures import AngleSuccess, AngleToGoal, TrainSuccess
 
@@ -40,6 +40,7 @@ class SimpleReward(Measure):
             self.uuid,
             [
                 DistanceToGoal.cls_uuid,
+                PlannerGoal.cls_uuid,
                 TrainSuccess.cls_uuid,
                 AngleToGoal.cls_uuid,
                 AngleSuccess.cls_uuid,
@@ -47,10 +48,12 @@ class SimpleReward(Measure):
         )
         self._metric = None
         self._previous_dtg = None
+        self._previous_sdtg = None
         self._previous_atg = None
         self.update_metric(task=task)
 
     def update_metric(self, *args: Any, task: EmbodiedTask, **kwargs: Any):
+        
         # success
         success = task.measurements.measures[TrainSuccess.cls_uuid].get_metric()
         success_reward = self._config.SUCCESS_REWARD if success else 0.0
@@ -62,6 +65,10 @@ class SimpleReward(Measure):
         add_dtg = self._config.USE_DTG_REWARD
         dtg_reward = self._previous_dtg - dtg if add_dtg else 0.0
         self._previous_dtg = dtg
+
+        # Shortest path 
+        sdtg = task.measurements.measures[PlannerGoal.cls_uuid].get_metric()
+        sdtg = self._config.SDTG_REWARD_SCALE * sdtg
 
         # angle-to-goal
         atg = task.measurements.measures[AngleToGoal.cls_uuid].get_metric()
@@ -86,10 +93,12 @@ class SimpleReward(Measure):
         # slack penalty
         slack_penalty = self._config.SLACK_PENALTY
 
+
         self._metric = (
             success_reward
             + dtg_reward
             + atg_reward
             + angle_success_reward
             + slack_penalty
+            + sdtg
         )

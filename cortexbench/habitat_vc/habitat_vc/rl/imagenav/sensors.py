@@ -173,8 +173,7 @@ class LocalTopDownMapSensor(Sensor):
         # If the extracted local_map is empty, return a blank map
         if local_map.size == 0:
             print("WARNING: Extracted local map is empty! Returning a blank map.")
-            import pdb; pdb.set_trace()
-            return np.zeros((self.local_map_size, self.local_map_size), dtype=np.uint8)
+            return -1*np.ones((self.local_map_size, self.local_map_size), dtype=np.uint8)
 
         # Resize the extracted local map to ensure consistent size
         if local_map.shape != (self.local_map_size, self.local_map_size):
