@@ -160,6 +160,7 @@ class EAINet(Net):
         # concatenate images
         if imagenav_task:
             goal_images = observations[ImageGoalRotationSensor.cls_uuid]
+
             x = torch.cat([images, goal_images], dim=0)
         else:
             x = images

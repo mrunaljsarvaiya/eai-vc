@@ -67,5 +67,5 @@ TASK_CONFIG:
   DATASET:
     TYPE: PointNav-v1
     SPLIT: train
-    SCENES_DIR: /scratch/ms14625/eai-vc/data/gibson_habitat/gibson
-    DATA_PATH: /scratch/ms14625/eai-vc/data/datasets/datasets/pointnav/gibson/v1/pointnav_gibson_v1/{split}/{split}.json.gz
+    SCENES_DIR: /home/pratyaksh/arpl/workspaces/ws_dynamics/eai-vc/data/scenes/gibson_habitat/gibson/
+    DATA_PATH: /home/pratyaksh/arpl/workspaces/ws_dynamics/eai-vc/data/datasets/pointnav/gibson/v1/pointnav_gibson_v1/{split}/{split}.json.gz
