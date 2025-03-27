@@ -11,6 +11,8 @@ from habitat.config import Config
 from habitat.core.registry import registry
 from habitat.core.simulator import RGBSensor, Sensor, SensorTypes, Simulator
 from habitat.tasks.nav.nav import NavigationEpisode
+from habitat.utils.visualizations import maps
+
 import cv2
 from gym import spaces
 from habitat.utils.visualizations import maps
@@ -176,6 +178,7 @@ class LocalTopDownMapSensor(Sensor):
             return -1*np.ones((self.local_map_size, self.local_map_size), dtype=np.uint8)
 
         # Resize the extracted local map to ensure consistent size
+        
         if local_map.shape != (self.local_map_size, self.local_map_size):
             local_map = cv2.resize(local_map, (self.local_map_size, self.local_map_size), interpolation=cv2.INTER_NEAREST)
 

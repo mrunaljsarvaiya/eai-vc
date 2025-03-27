@@ -11,7 +11,7 @@ from habitat.config import Config
 from habitat.core.embodied_task import EmbodiedTask, Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Simulator
-from habitat.tasks.nav.nav import DistanceToGoal, PlannerGoal
+from habitat.tasks.nav.nav import DistanceToGoal, PlannerGoal, Collisions
 
 from habitat_vc.rl.measures import AngleSuccess, AngleToGoal, TrainSuccess
 
@@ -40,6 +40,7 @@ class SimpleReward(Measure):
             self.uuid,
             [
                 DistanceToGoal.cls_uuid,
+                Collisions.cls_uuid,
                 PlannerGoal.cls_uuid,
                 TrainSuccess.cls_uuid,
                 AngleToGoal.cls_uuid,
@@ -51,6 +52,7 @@ class SimpleReward(Measure):
         self._previous_sdtg = None
         self._previous_atg = None
         self.update_metric(task=task)
+
 
     def update_metric(self, *args: Any, task: EmbodiedTask, **kwargs: Any):
         
@@ -69,6 +71,14 @@ class SimpleReward(Measure):
         # Shortest path 
         sdtg = task.measurements.measures[PlannerGoal.cls_uuid].get_metric()
         sdtg = self._config.SDTG_REWARD_SCALE * sdtg
+
+        # Collision cost
+        collision_penalty = 0.0
+        if task.measurements.measures[Collisions.cls_uuid].get_metric() is not None:
+            collision = task.measurements.measures[Collisions.cls_uuid].get_metric()["is_collision"]
+
+            if collision:
+                collision_penalty = -1.0
 
         # angle-to-goal
         atg = task.measurements.measures[AngleToGoal.cls_uuid].get_metric()
@@ -90,6 +100,24 @@ class SimpleReward(Measure):
             self._config.ANGLE_SUCCESS_REWARD if angle_success else 0.0
         )
 
+        # action = task.last_action
+
+        # collision_penalty = 0.0
+        # if hasattr(task, "last_observation") and hasattr(task, "last_action"):
+            
+        #     if task.last_observation is not None:
+
+        #         local_map = task.last_observation["local_top_down_map"]
+        #         local_map = (local_map > 0).astype(np.uint8)
+        #         center = [local_map.shape[0] // 2, local_map.shape[1] // 2]
+        #         agent_state = task._sim.get_agent_state()
+        #         heading = np.rad2deg(agent_state.rotation.euler_angles[1])
+        #         action = int(task.last_action)
+
+        #         if self.will_collide(local_map, action, heading, center):
+        #             print("Collision")
+        #             collision_penalty = -1.0
+
         # slack penalty
         slack_penalty = self._config.SLACK_PENALTY
 
@@ -99,6 +127,6 @@ class SimpleReward(Measure):
             + dtg_reward
             + atg_reward
             + angle_success_reward
-            + slack_penalty
-            + sdtg
+            + slack_penalty 
+            + collision_penalty
         )

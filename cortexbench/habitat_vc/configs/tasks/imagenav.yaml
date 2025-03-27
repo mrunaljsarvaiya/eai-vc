@@ -62,6 +62,7 @@ TASK_CONFIG:
       "ANGLE_SUCCESS",
       "SPL",
       "SOFT_SPL",
+      "COLLISIONS",
       "SIMPLE_REWARD",
     ]
 
