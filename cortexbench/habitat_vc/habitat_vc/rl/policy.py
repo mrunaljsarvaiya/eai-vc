@@ -15,6 +15,8 @@ from habitat_baselines.common.baseline_registry import baseline_registry
 from habitat_baselines.rl.models.rnn_state_encoder import build_rnn_state_encoder
 from habitat_baselines.rl.ppo import Net, Policy
 from torch import nn as nn
+import cv2  # Add this import
+import os   # Add this import
 
 from habitat_vc.rl.imagenav.sensors import ImageGoalRotationSensor
 from habitat_vc.visual_encoder import VisualEncoder
@@ -61,15 +63,15 @@ class EAINet(Net):
             use_augmentations=use_augmentations,
         )
 
-        self.map_encoder = MapNet()
-        rnn_input_size += 256 # Adjust based on CNN output size
+        # self.map_encoder = MapNet()
+        # rnn_input_size += 256 # Adjust based on CNN output size
 
         self.visual_fc = nn.Sequential(
             nn.Linear(self.visual_encoder.output_size, hidden_size),
             nn.ReLU(True),
         )
 
-        print(f"base encoder hidden size {hidden_size}")
+        # print(f"base encoder hidden size {hidden_size}")
         rnn_input_size += hidden_size
 
         # object goal embedding
@@ -137,6 +139,9 @@ class EAINet(Net):
             
         # save configuration
         self._hidden_size = hidden_size
+        self.image_index = 0  # Member variable to track saved images
+        os.makedirs("saved_images_distort", exist_ok=True)
+        os.makedirs("saved_images", exist_ok=True)
 
         self.train()
 
@@ -155,6 +160,13 @@ class EAINet(Net):
     def transform_images(self, observations, number_of_envs):
         images = observations["rgb"]
 
+        add_noise = False
+        if add_noise:
+            images = images.float() / 255.0
+            images = images + torch.randn_like(images) * 0.1
+            images = torch.clamp(images, 0.0, 1.0) * 255.0
+            images = images.to(torch.uint8)
+
         imagenav_task = ImageGoalRotationSensor.cls_uuid in observations
 
         # concatenate images
@@ -168,7 +180,67 @@ class EAINet(Net):
         x = (
             x.permute(0, 3, 1, 2).float() / 255
         )  # convert channels-last to channels-first
+
         x = self.visual_encoder.visual_transform(x, number_of_envs)
+
+
+        save_distory_images = False 
+        if save_distory_images:
+            # Save the first 50 images
+            rgb, goal_rgb = x.chunk(2, dim=0)
+            
+            # permuate images back to channels-last
+            rgb = rgb.permute(0, 2, 3, 1)
+            goal_rgb = goal_rgb.permute(0, 2, 3, 1)
+            rgb = rgb.clone()
+            goal_rgb = goal_rgb.clone()
+            # distort with gaussian noise 
+            rgb_distort = rgb + torch.randn_like(rgb) * 0.1
+            rgb_distort = torch.clamp(rgb_distort, 0.0, 1.0)
+            goal_rgb_distort = goal_rgb + torch.randn_like(goal_rgb) * 0.1
+            goal_rgb_distort = torch.clamp(goal_rgb_distort, 0.0, 1.0)
+
+            if self.image_index < 50:
+                for i in range(images.size(0)):
+                    rgb_image = (rgb[i].detach().cpu().numpy() * 255).astype('uint8')  # Scale to 0-255 and convert to uint8
+                    rgb_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
+                    cv2.imwrite(f"saved_images/rgb_{self.image_index}.png", rgb_image)
+                    
+                    rgb_image = (rgb_distort[i].detach().cpu().numpy() * 255).astype('uint8') 
+                    rgb_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
+                    cv2.imwrite(f"saved_images_distort/rgb_{self.image_index}.png", rgb_image)
+
+                    if imagenav_task:
+                        goal_image = (goal_rgb[i].detach().cpu().numpy() * 255).astype('uint8')  # Scale to 0-255 and convert to uint8
+                        goal_image = cv2.cvtColor(goal_image, cv2.COLOR_RGB2BGR)
+                        cv2.imwrite(f"saved_images/goal_rgb_{self.image_index}.png", goal_image)
+
+                        goal_image = (goal_rgb_distort[i].detach().cpu().numpy() * 255).astype('uint8') 
+                        goal_image = cv2.cvtColor(goal_image, cv2.COLOR_RGB2BGR)
+                        cv2.imwrite(f"saved_images_distort/goal_rgb_{self.image_index}.png", goal_image)
+
+                    self.image_index += 1
+                    if self.image_index >= 50:
+                        break
+
+        save_images = False 
+        if save_images:
+            # Save the first 50 images
+            rgb, goal_rgb = x.chunk(2, dim=0)
+            
+            # permuate images back to channels-last
+            rgb = rgb.permute(0, 2, 3, 1)
+            goal_rgb = goal_rgb.permute(0, 2, 3, 1)
+
+            if self.image_index < 50:
+                for i in range(images.size(0)):
+                    rgb_image = (rgb[i].detach().cpu().numpy() * 255).astype('uint8')
+                    rgb_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
+                    cv2.imwrite(f"saved_images/rgb_{self.image_index}.png", rgb_image)                    
+
+                    self.image_index += 1
+                    if self.image_index >= 50:
+                        break
 
         return x.chunk(2, dim=0) if imagenav_task else x
 
@@ -192,11 +264,11 @@ class EAINet(Net):
         x.append(rgb)
 
         # map encoder
-        t1 = time.time()
-        plot_map = observations["local_top_down_map"].float()
-        plot_map = plot_map.unsqueeze(1)
-        map_encoding = self.map_encoder(plot_map)
-        x.append(map_encoding)
+        # t1 = time.time()
+        # plot_map = observations["local_top_down_map"].float()
+        # plot_map = plot_map.unsqueeze(1)
+        # map_encoding = self.map_encoder(plot_map)
+        # x.append(map_encoding)
 
         # goal embedding
         if ImageGoalRotationSensor.cls_uuid in observations:

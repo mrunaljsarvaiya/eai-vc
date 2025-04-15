@@ -74,11 +74,12 @@ class SimpleReward(Measure):
 
         # Collision cost
         collision_penalty = 0.0
-        if task.measurements.measures[Collisions.cls_uuid].get_metric() is not None:
-            collision = task.measurements.measures[Collisions.cls_uuid].get_metric()["is_collision"]
+        # scale = 0.5
+        # if task.measurements.measures[Collisions.cls_uuid].get_metric() is not None:
+        #     collision = task.measurements.measures[Collisions.cls_uuid].get_metric()["is_collision"]
 
-            if collision:
-                collision_penalty = -1.0
+        #     if collision:
+        #         collision_penalty = -1.0 * scale
 
         # angle-to-goal
         atg = task.measurements.measures[AngleToGoal.cls_uuid].get_metric()
