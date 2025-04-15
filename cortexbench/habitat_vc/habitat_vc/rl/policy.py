@@ -68,8 +68,8 @@ class EAINet(Net):
         self.map_encoder = MapNet()
         rnn_input_size += 256 # Adjust based on CNN output size
 
-        self.depth_encoder = Encoder(n_kernels=4, repr_dim=512, dropout=0.1)
-        rnn_input_size += 512 # Adjust based on CNN output size
+        self.depth_encoder = Encoder(n_kernels=4, repr_dim=256, dropout=0.1)
+        rnn_input_size += 256 # Adjust based on CNN output size
 
         self.visual_fc = nn.Sequential(
             nn.Linear(self.visual_encoder.output_size, hidden_size),
