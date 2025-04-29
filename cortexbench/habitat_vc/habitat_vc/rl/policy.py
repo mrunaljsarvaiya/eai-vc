@@ -21,8 +21,12 @@ import os   # Add this import
 from habitat_vc.rl.imagenav.sensors import ImageGoalRotationSensor
 from habitat_vc.visual_encoder import VisualEncoder
 from habitat_vc.models.mapnet import MapNet
+from habitat_vc.models.depth_encoder import Encoder
 from habitat_vc.models.freeze_batchnorm import convert_frozen_batchnorm
 
+import matplotlib.pyplot as plt
+import cv2
+import numpy as np
 
 class EAINet(Net):
     def __init__(
@@ -65,6 +69,9 @@ class EAINet(Net):
 
         # self.map_encoder = MapNet()
         # rnn_input_size += 256 # Adjust based on CNN output size
+
+        self.depth_encoder = Encoder(n_kernels=4, repr_dim=512, dropout=0.1)
+        rnn_input_size += 512 # Adjust based on CNN output size
 
         self.visual_fc = nn.Sequential(
             nn.Linear(self.visual_encoder.output_size, hidden_size),
@@ -257,6 +264,10 @@ class EAINet(Net):
         N = rnn_hidden_states.size(0)
 
         rgb, goal_rgb = self.transform_images(observations, N)
+
+        rgb_cropped = rgb[:, :, 0:126, 0:126]
+        depth_encodings = self.depth_encoder(rgb_cropped).detach()
+        x.append(depth_encodings)
 
         # visual encoder
         rgb = self.visual_encoder(rgb)
